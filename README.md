@@ -1,104 +1,113 @@
-# Anti-Fraud System 🛡️
+# Anti-Fraud System
 
-A Spring Boot application that analyzes card transactions in real time to detect and prevent fraudulent activity. The system classifies transactions based on risk, supports adaptive feedback to refine thresholds, and enforces role-based access control.
+A modular, secure, and extensible Java-based anti-fraud system for processing and evaluating financial transactions in real-time.
 
 ---
 
-## 🧱 Modular Architecture
+## Modular Architecture
 
-This project uses a **domain-oriented modular architecture** to reflect real-world fraud detection concerns and maintain clear separation of responsibilities.
+The system follows a **modular architecture**, organized into the following core modules:
 
-### Modules:
-
-- **user** – Handles registration, authentication, role management, and account access control.
+- **user** – Handles user registration, authentication, role management, and account access control.
 - **transaction** – Evaluates transactions, applies fraud rules, and processes feedback for dynamic risk scoring.
-- **ioc (Indicators of Compromise)** – Maintains blacklists for stolen cards and suspicious IPs, and supports rule-based fraud detection.
+- **ioc (Indicators of Compromise)** – Maintains blacklists for stolen cards and suspicious IPs, supporting rule-based fraud detection.
 
 ---
 
-## 🔌 REST API Overview
-
-| Method | Endpoint | Access Role | Description |
-|--------|----------|-------------|-------------|
-| POST | `/api/auth/user` | anonymous → `ADMINISTRATOR` | Create first user |
-| DELETE | `/api/auth/user/{username}` | `ADMINISTRATOR` | Delete user |
-| GET | `/api/auth/list` | `ADMINISTRATOR`, `SUPPORT` | List users |
-| PUT | `/api/auth/role` | `ADMINISTRATOR` | Modify user role |
-| PUT | `/api/auth/access` | `ADMINISTRATOR` | Lock/unlock user |
-| POST | `/api/antifraud/transaction` | `MERCHANT` | Submit a transaction |
-| PUT | `/api/antifraud/transaction` | `SUPPORT` | Submit feedback |
-| GET | `/api/antifraud/history` | `SUPPORT` | View all transactions |
-| GET | `/api/antifraud/history/{number}` | `SUPPORT` | View by card number |
-| POST | `/api/antifraud/stolencard` | `SUPPORT` | Add stolen card |
-| GET | `/api/antifraud/stolencard` | `SUPPORT` | List stolen cards |
-| DELETE | `/api/antifraud/stolencard/{number}` | `SUPPORT` | Remove card |
-| POST | `/api/antifraud/suspicious-ip` | `SUPPORT` | Add IP address |
-| GET | `/api/antifraud/suspicious-ip` | `SUPPORT` | List suspicious IPs |
-| DELETE | `/api/antifraud/suspicious-ip/{ip}` | `SUPPORT` | Remove IP |
-
-
----
-
-## ⚙️ Technologies Used
+## Technologies Used
 
 - **Java 17**
-- **Spring Boot 3**
-- **Spring Security 6**
-- **Spring Web / MVC**
-- **PostgreSQL / H2**
-- **Gradle (multi-module)**
-- **Lombok**
+- **Spring Boot**
+- **Spring Security** for authentication and authorization
+- **Spring Data JDBC / JdbcTemplate** for database access
+- **H2 Database** (used only for testing purposes)
+- **Gradle** for project build
 
 ---
 
-## 🔒 Security & Roles
+## Database Access
 
-| Role | Capabilities |
-|------|--------------|
-| `ADMINISTRATOR` | User/role management |
-| `SUPPORT` | Fraud analysis, blacklists, feedback |
-| `MERCHANT` | Transaction screening |
-
-Authentication is stateless. Passwords are stored using BCrypt hashing.
+The project uses **JdbcTemplate** for data access. An **H2 in-memory database** is used for testing and development. In a production environment, this can be swapped for a persistent relational database.
 
 ---
 
-## 🧠 Adaptive Fraud Detection
+## Security and User Roles
 
-The system uses multiple fraud rules including:
-
-- Amount thresholds
-- IP & card blacklists
-- Region and IP correlation
-
-Feedback submitted by support agents dynamically adjusts transaction limits using the formula:
-
-```
-newLimit = 0.8 * currentLimit ± 0.2 * transactionAmount
-```
+- Authentication and authorization are implemented via **Spring Security**.
+- The system defines four user roles:
+  - **ADMINISTRATOR**: Manages users, access rights, and roles.
+  - **MERCHANT**: Submits transactions and provides feedback.
+  - **SUPPORT**: Views and manages IPs, stolen cards, and transaction history.
+  - **Anonymous**: Limited to registration only.
+- The **first registered user** becomes an **ADMINISTRATOR** by default.
+- All other users are assigned the **MERCHANT** role and are **locked by default**.
+- **Administrators** can **lock** or **unlock** accounts.
 
 ---
 
-## 🚀 Running the Project
+## Endpoint Access Control
 
-### With embedded H2:
+| Endpoint                          | Method          | Anonymous | MERCHANT | ADMINISTRATOR | SUPPORT |
+| --------------------------------- | --------------- | --------- | -------- | ------------- | ------- |
+| `/api/auth/user`                  | POST            | +         | +        | +             | +       |
+| `/api/auth/user`                  | DELETE          | -         | -        | +             | -       |
+| `/api/auth/list`                  | GET             | -         | -        | +             | +       |
+| `/api/antifraud/transaction`      | POST            | -         | +        | -             | -       |
+| `/api/antifraud/suspicious-ip`    | GET/POST/DELETE | -         | -        | -             | +       |
+| `/api/antifraud/stolencard`       | GET/POST/DELETE | -         | -        | -             | +       |
+| `/api/antifraud/history`          | GET             | -         | -        | -             | +       |
+| `/api/antifraud/transaction`      | PUT             | -         | -        | -             | +       |
 
-```bash
-./gradlew :infra:bootRun
-```
-
-### With PostgreSQL using Docker:
-
-```bash
-docker-compose up -d
-./gradlew :infra:bootRun
-```
-
+Legend: `+` Access granted | `-` Access denied
 
 ---
 
-## 💬 Contributing
+## Transaction Evaluation
 
-Pull requests and issues are welcome. For major changes, open a discussion first.
+Each transaction is evaluated through a set of fraud detection rules. These rules implement a **common interface**, and the system uses the **Strategy design pattern** to apply the appropriate rules dynamically.
 
+### Evaluation Result
 
+A transaction response includes:
+
+- **Result**: One of `ALLOWED`, `MANUAL_PROCESSING`, or `PROHIBITED`
+
+- **Info**: Justification for the decision. This may be `"none"` if the result is `ALLOWED`.
+
+---
+
+## Feedback and Risk Adjustment
+
+- Feedback can be provided for each transaction.
+
+- Based on feedback:
+
+  - **Limits** for `ALLOWED` and `MANUAL_PROCESSING` are **adjusted**.
+
+  - Positive feedback increases trust and raises limits.
+
+  - Negative feedback reduces limits to tighten risk control.
+
+---
+
+## Development and Testing
+
+- Start the application: `./gradlew bootRun`
+
+- Use the H2 Console: Navigate to `/h2-console`
+
+- All settings can be managed via `application.properties`
+
+---
+
+## License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## Contribution
+
+Contributions are encouraged! Fork the repository, make your improvements, and submit a pull request.
+
+---

@@ -64,7 +64,7 @@ Legend: `+` Access granted | `-` Access denied
 
 ## Transaction Evaluation
 
-Each transaction is evaluated through a set of fraud detection rules. These rules implement a **common interface**, and the system uses the **Strategy design pattern** to apply the appropriate rules dynamically.
+Transactions are processed using a set of rule classes that all implement a shared interface. The system is designed using the **Chain of Responsibility design pattern**, enabling modular, sequential rule evaluation.
 
 ### Evaluation Result
 

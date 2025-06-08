@@ -99,15 +99,3 @@ A transaction response includes:
 - All settings can be managed via `application.properties`
 
 ---
-
-## License
-
-This project is licensed under the **MIT License**.
-
----
-
-## Contribution
-
-Contributions are encouraged! Fork the repository, make your improvements, and submit a pull request.
-
----

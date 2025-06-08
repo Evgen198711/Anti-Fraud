@@ -21,12 +21,11 @@ This project uses a **domain-oriented modular architecture** to reflect real-wor
 | Method | Endpoint | Access Role | Description |
 |--------|----------|-------------|-------------|
 | POST | `/api/auth/user` | anonymous → `ADMINISTRATOR` | Create first user |
-| POST | `/api/auth/user` | `ADMINISTRATOR` | Add user |
 | DELETE | `/api/auth/user/{username}` | `ADMINISTRATOR` | Delete user |
 | GET | `/api/auth/list` | `ADMINISTRATOR`, `SUPPORT` | List users |
 | PUT | `/api/auth/role` | `ADMINISTRATOR` | Modify user role |
 | PUT | `/api/auth/access` | `ADMINISTRATOR` | Lock/unlock user |
-| POST | `/api/antifraud/transaction` | `MERCHANT` | Evaluate a transaction |
+| POST | `/api/antifraud/transaction` | `MERCHANT` | Submit a transaction |
 | PUT | `/api/antifraud/transaction` | `SUPPORT` | Submit feedback |
 | GET | `/api/antifraud/history` | `SUPPORT` | View all transactions |
 | GET | `/api/antifraud/history/{number}` | `SUPPORT` | View by card number |
